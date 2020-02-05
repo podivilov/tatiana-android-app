@@ -37,6 +37,3 @@ obj/
 
 #Google Services
 google-services.json
-
-# Potential password leakage
-app/build/intermediates/signing_config/release/out/signing-config.json
