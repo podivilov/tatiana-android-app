@@ -8,5 +8,6 @@
     <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
     <string name="msg_subscribed">Subscribed to global topic</string>
     <string name="msg_subscribe_failed">Failed to subscribe to global topic</string>
+    <string name="notification_icon_color">#007aff</string>
 
 </resources>

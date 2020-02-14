@@ -4,8 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.graphics.Color;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -13,8 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -43,23 +42,21 @@ public class MainActivity extends Activity {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
+    public class BootUpReceiver extends BroadcastReceiver {
+        @SuppressLint("UnsafeProtectedBroadcastReceiver")
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Intent i = new Intent(context, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        View decorView = getWindow().getDecorView();
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(Color.TRANSPARENT);
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create channel to show notifications.
@@ -67,8 +64,9 @@ public class MainActivity extends Activity {
             String channelName = getString(R.string.default_notification_channel_name);
             NotificationManager notificationManager =
                     getSystemService(NotificationManager.class);
+            assert notificationManager != null;
             notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-                    channelName, NotificationManager.IMPORTANCE_LOW));
+                    channelName, NotificationManager.IMPORTANCE_DEFAULT));
         }
 
         // If a notification message is tapped, any data accompanying the notification
@@ -86,7 +84,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        FirebaseMessaging.getInstance().subscribeToTopic("global")
+        FirebaseMessaging.getInstance().subscribeToTopic(String.valueOf(R.string.default_notification_channel_id))
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -117,6 +115,7 @@ public class MainActivity extends Activity {
                         //Toast.makeText(ru.podivilov.tatiana.MainActivity.this, msg, Toast.LENGTH_SHORT).show();
                     }
                 });
+
         mWebView = findViewById(R.id.activity_main_webview);
         mImageView = findViewById(R.id.imageView);
 
@@ -160,18 +159,6 @@ public class MainActivity extends Activity {
                         Handler handler = new Handler();
                         Runnable r=new Runnable() {
                             public void run() {
-                                View decorView = getWindow().getDecorView();
-                                int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-                                decorView.setSystemUiVisibility(uiOptions);
-
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    Window window = getWindow();
-                                    window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                                    window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-                                    window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                                    window.setStatusBarColor(Color.TRANSPARENT);
-                                }
-
                                 mImageView.setVisibility(View.GONE);
                                 mWebView.setVisibility(View.VISIBLE);                            }
                         };
@@ -186,8 +173,6 @@ public class MainActivity extends Activity {
         WebSettings webSettings = mWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         mWebView.setVerticalScrollBarEnabled(false);
-
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         mWebView.loadUrl("https://tatiana-app.podivilov.ru/android/");
 
