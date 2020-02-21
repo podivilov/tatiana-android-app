@@ -186,5 +186,11 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void onBackPressed() { }
+    public void onBackPressed()
+    {
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN, null);
+        homeIntent.addCategory(Intent.CATEGORY_HOME);
+        homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        startActivity(homeIntent);
+    }
 }
