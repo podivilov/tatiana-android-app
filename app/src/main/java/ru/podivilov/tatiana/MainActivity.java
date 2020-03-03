@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -168,6 +169,10 @@ public class MainActivity extends Activity {
                     }
                 }
                 doNotShowMeAgain = true;
+            }
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                CookieSyncManager.getInstance().sync();
             }
         });
         WebSettings webSettings = mWebView.getSettings();
