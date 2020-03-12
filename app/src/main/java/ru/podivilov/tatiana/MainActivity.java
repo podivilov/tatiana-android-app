@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -16,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -23,6 +23,9 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
+import com.apptakk.http_request.HttpRequest;
+import com.apptakk.http_request.HttpRequestTask;
+import com.apptakk.http_request.HttpResponse;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -36,21 +39,14 @@ public class MainActivity extends Activity {
     private Boolean doNotShowMeAgain = false;
     private static final String TAG = "MainActivity";
 
+    public Boolean httpError = false;
+    public Boolean connectionError = false;
+
     public boolean isOnline() {
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
-    }
-
-    public class BootUpReceiver extends BroadcastReceiver {
-        @SuppressLint("UnsafeProtectedBroadcastReceiver")
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Intent i = new Intent(context, MainActivity.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -140,6 +136,8 @@ public class MainActivity extends Activity {
                 }
 
                 if (!isOnline()) {
+                    connectionError = true;
+
                     mWebView.loadUrl("about:blank");
                     mWebView.loadUrl("file:///android_asset/error_pages/no_internet_connection.html");
                     mWebView.invalidate();
@@ -161,7 +159,8 @@ public class MainActivity extends Activity {
                         Runnable r=new Runnable() {
                             public void run() {
                                 mImageView.setVisibility(View.GONE);
-                                mWebView.setVisibility(View.VISIBLE);                            }
+                                mWebView.setVisibility(View.VISIBLE);
+                            }
                         };
                         handler.postDelayed(r, 1000);
                     } catch (Exception e) {
@@ -173,6 +172,31 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 CookieSyncManager.getInstance().sync();
+
+                if (!httpError && !connectionError) {
+                    new HttpRequestTask(
+                            new HttpRequest("https://tatiana-app.podivilov.ru/api/v1/method/status.isOnline/", HttpRequest.GET),
+                            new HttpRequest.Handler() {
+                                @Override
+                                public void response(HttpResponse response) {
+                                    if (response.code != 200) {
+                                        mWebView.loadUrl("about:blank");
+                                        mWebView.loadUrl("file:///android_asset/error_pages/unexpected_error.html");
+                                        mWebView.invalidate();
+
+                                        httpError = true;
+                                    }
+                                }
+                            }).execute();
+                }
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                if (!request.getUrl().toString().contains("tatiana-app.podivilov.ru")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, request.getUrl());
+                    view.getContext().startActivity(intent);
+                }
+                return true;
             }
         });
         WebSettings webSettings = mWebView.getSettings();

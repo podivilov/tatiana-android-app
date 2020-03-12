@@ -8,8 +8,8 @@ android {
         applicationId "ru.podivilov.tatiana"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 23
-        versionName "1.4.0"
+        versionCode 27
+        versionName "1.4.4"
     }
     buildTypes {
         release {
@@ -23,7 +23,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.firebase:firebase-messaging:20.1.0'
-    implementation 'com.google.firebase:firebase-analytics:17.2.2'
+    implementation 'com.google.firebase:firebase-messaging:20.1.2'
+    implementation 'com.google.firebase:firebase-analytics:17.2.3'
     implementation 'android.arch.work:work-runtime-ktx:1.0.1'
+    implementation 'com.apptakk.http_request:http-request:0.1.2'
 }
