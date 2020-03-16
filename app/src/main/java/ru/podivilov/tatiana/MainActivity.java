@@ -32,6 +32,8 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.net.InetAddress;
+
 public class MainActivity extends Activity {
 
     private WebView mWebView;
@@ -47,6 +49,17 @@ public class MainActivity extends Activity {
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
+    }
+
+    public boolean isInternetAvailable() {
+        try {
+            InetAddress ipAddr = InetAddress.getByName("tatiana-app.podivilov.ru");
+            //You can replace it with your name
+            return !ipAddr.equals("");
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -135,7 +148,7 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                if (!isOnline()) {
+                if (!isOnline() || !isInternetAvailable()) {
                     connectionError = true;
 
                     mWebView.loadUrl("about:blank");
@@ -175,7 +188,7 @@ public class MainActivity extends Activity {
 
                 if (!httpError && !connectionError) {
                     new HttpRequestTask(
-                            new HttpRequest("https://tatiana-app.podivilov.ru/api/v1/method/status.isOnline/", HttpRequest.GET),
+                            new HttpRequest("https://ws.podivilov.ru/socket.io/?EIO=3&transport=polling", HttpRequest.GET),
                             new HttpRequest.Handler() {
                                 @Override
                                 public void response(HttpResponse response) {
